@@ -13,7 +13,12 @@ So most of my code will resemble to his code.
 
 ## Docker Setup In EC2 commands to be Executed
 
-#optinal
+1. Launch Instance, click in the Instance ID and connect
+2. Click on Security groups link and edit the inbound rules and add
+3. Add Custom TCP and set port to be the same port as mentioned inside app.py (e.g. 3000) and source to be (0.0.0.0/0)
+4. Make sure Yaml file of the workflows also use same port as mentioned in the step 3
+
+# Optional
 
 sudo apt-get update -y
 
