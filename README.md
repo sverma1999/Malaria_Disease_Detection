@@ -36,8 +36,7 @@ newgrp docker
 3. Under "Code and automation" menu, open Action toggle and click "Runners"
 4. Click "New self-hosted runner" button
 5. Select the Runner image, architecture
-6. Copy each command from "Download" section
-7. Configure, Using your self-hosted runner
+6. Copy each command from Download, Configure, and Using your self-hosted runner and paste on the CLI of ec2 instance
 
 ## Setup github secrets:
 
@@ -47,6 +46,6 @@ AWS_SECRET_ACCESS_KEY=
 
 AWS_REGION = us-east-1
 
-AWS_ECR_LOGIN_URI = demo>> 566373416292.dkr.ecr.ap-south-1.amazonaws.com
+AWS_ECR_LOGIN_URI =
 
-ECR_REPOSITORY_NAME = simple-app
+ECR_REPOSITORY_NAME = personalproject_mdd
