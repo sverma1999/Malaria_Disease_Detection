@@ -138,3 +138,5 @@ dmypy.json
 
 # others files/folders
 Dataset/
+cell_images/
+aws_setup/
