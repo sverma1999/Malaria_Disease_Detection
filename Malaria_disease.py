@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[12]:
-
 
 # Import libraries
 from tensorflow.keras.layers import Input, Lambda, Dense, Flatten,Conv2D
@@ -16,10 +11,6 @@ import numpy as np
 from glob import glob
 import matplotlib.pyplot as plt
 
-
-# In[29]:
-
-
 # re-size all the images to this
 IMAGE_SIZE = [224, 224]
 
@@ -28,13 +19,7 @@ test_path = 'Dataset/test'
 val_path = 'Dataset/val'
 
 
-# In[ ]:
 
-
-
-
-
-# In[14]:
 
 
 # Import the Vgg 19 library as shown below and add preprocessing layer to the front of VGG
@@ -42,22 +27,11 @@ val_path = 'Dataset/val'
 
 vgg19 = VGG19(input_shape=IMAGE_SIZE + [3], weights='imagenet', include_top=False)
 
-
-# In[15]:
-
-
 vgg19.summary()
-
-
-# In[16]:
-
 
 # don't train existing weights
 for layer in vgg19.layers:
     layer.trainable = False
-
-
-# In[17]:
 
 
 # Getting number of output classes
@@ -65,14 +39,9 @@ folders = glob('Dataset/train/*')
 folders
 
 
-# In[18]:
-
 
 # our layers - you can add more if you want
 x = Flatten()(vgg19.output)
-
-
-# In[19]:
 
 
 # len(folders) is our output layer
@@ -83,14 +52,8 @@ prediction = Dense(len(folders), activation='softmax')(x)
 model = Model(inputs=vgg19.input, outputs=prediction)
 
 
-# In[21]:
-
-
 # view the structure of the model
 model.summary()
-
-
-# In[22]:
 
 
 # tell the model what cost and optimization method to use
@@ -101,9 +64,6 @@ model.compile(
   optimizer='adam',
   metrics=['accuracy']
 )
-
-
-# In[23]:
 
 
 # Use the Image Data Generator to import the images from the dataset
@@ -119,9 +79,6 @@ train_datagen = ImageDataGenerator(rescale = 1./255,
 val_datagen = ImageDataGenerator(rescale = 1./255)
 
 
-# In[24]:
-
-
 # Make sure you provide the same target size as initialied for the image size
 training_set = train_datagen.flow_from_directory(train_path,
                                                  target_size = (224, 224),
@@ -129,40 +86,23 @@ training_set = train_datagen.flow_from_directory(train_path,
                                                  class_mode = 'categorical')
 
 
-# In[32]:
-
 
 training_set
 
 
-# In[ ]:
 
 
 
 
 
-# In[ ]:
 
 
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[26]:
 
 
 val_set = val_datagen.flow_from_directory(val_path,
                                             target_size = (224, 224),
                                             batch_size = 32,
                                             class_mode = 'categorical')
-
-
-# In[27]:
 
 
 # fit the model
@@ -176,13 +116,7 @@ r = model.fit_generator(
 )
 
 
-# In[ ]:
 
-
-
-
-
-# In[35]:
 
 
 # Test dataset
@@ -201,45 +135,24 @@ test_set = test_datagen.flow_from_directory(
 )
 
 
-# In[53]:
-
-
 class_names = list(training_set.class_indices.keys())
 class_names
 
 
-# In[ ]:
 
 
 
 
-
-# In[ ]:
-
-
-
-
-
-# In[36]:
 
 
 scores = model.evaluate(test_set)
 scores
 
 
-# In[37]:
-
-
 r.params
 
 
-# In[38]:
-
-
 r.history.keys()
-
-
-# In[39]:
 
 
 loss = r.history['loss']
@@ -247,9 +160,6 @@ val_loss = r.history['val_loss']
 
 accuracy = r.history['accuracy']
 val_accuracy = r.history['val_accuracy']
-
-
-# In[40]:
 
 
 # plot the loss
@@ -267,13 +177,7 @@ plt.show()
 plt.savefig('AccVal_acc')
 
 
-# In[ ]:
 
-
-
-
-
-# In[57]:
 
 
 # plt.figure(figsize=(15, 8))
@@ -291,20 +195,11 @@ plt.savefig('AccVal_acc')
 # plt.show()
 
 
-# In[59]:
-
-
 CLASS_NAMES = ["Parasitized", "Uninfected"]
-
-
-# In[66]:
 
 
 import tensorflow as tf
 from PIL import Image
-
-
-# In[75]:
 
 
 # def predict(model, img):
@@ -323,60 +218,46 @@ from PIL import Image
 
 
 
-def predict(model, img):
+# def predict(model, img):
     
-    # converting images into array
-    img_array = tf.keras.preprocessing.image.img_to_array(img)
-    img_array = np.expand_dims(img_array, 0)
+#     # converting images into array
+#     img_array = tf.keras.preprocessing.image.img_to_array(img)
+#     img_array = np.expand_dims(img_array, 0)
   
-    # making the prediction
-    predictions = model.predict(img_array)
-    predicted_class = CLASS_NAMES[np.argmax(predictions[0])]
+#     # making the prediction
+#     predictions = model.predict(img_array)
+#     predicted_class = CLASS_NAMES[np.argmax(predictions[0])]
 
-    confidence = round(100 * (np.max(predictions[0])), 2)
-    return predicted_class, confidence
-
-
-# In[78]:
+#     confidence = round(100 * (np.max(predictions[0])), 2)
+#     return predicted_class, confidence
 
 
-plt.figure(figsize=(17, 17))
-counter =0
-for images, labels in test_set:
-    for i in range(12):
-        ax = plt.subplot(3, 4, i + 1)
-        plt.imshow(images[i])
+
+# plt.figure(figsize=(17, 17))
+# counter =0
+# for images, labels in test_set:
+#     for i in range(12):
+#         ax = plt.subplot(3, 4, i + 1)
+#         plt.imshow(images[i])
         
-        predicted_class, confidence = predict(model, images[i])
-        actual_class = class_names[int(labels[i][0])]
+#         predicted_class, confidence = predict(model, images[i])
+#         actual_class = class_names[int(labels[i][0])]
         
-        plt.title(f"Actual: {actual_class},\n Predicted: {predicted_class}.\n Confidence: {confidence}%")
+#         plt.title(f"Actual: {actual_class},\n Predicted: {predicted_class}.\n Confidence: {confidence}%")
         
-        plt.axis("off")
+#         plt.axis("off")
         
         
-    break
-
-
-# In[ ]:
+#     break
 
 
 
 
 
-# In[ ]:
 
 
 
 
-
-# In[ ]:
-
-
-
-
-
-# In[45]:
 
 
 import os
@@ -384,13 +265,7 @@ import os
 # int(float('5.0'))
 
 
-# In[46]:
-
-
 os.listdir("saved_models")
-
-
-# In[47]:
 
 
 import os
@@ -398,34 +273,20 @@ model_version = max([int(i) for i in os.listdir("saved_models") if i != '.DS_Sto
 model_version
 
 
-# In[48]:
-
-
 # Create new directory with model version
 model_dir = os.path.join("saved_models", str(model_version))
 os.makedirs(model_dir, exist_ok=True)
-
-
-# In[49]:
 
 
 # Save model inside new directory
 model.save(os.path.join(model_dir, "model_vgg19.h5"))
 
 
-# In[ ]:
 
 
 
 
 
-# In[ ]:
-
-
-
-
-
-# In[50]:
 
 
 # save it as a h5 file
@@ -436,31 +297,17 @@ model.save(os.path.join(model_dir, "model_vgg19.h5"))
 # model.save('model_vgg19.h5')
 
 
-# In[ ]:
 
 
 
 
 
-# In[ ]:
 
 
 
 
 
-# In[ ]:
 
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
 
 
 
