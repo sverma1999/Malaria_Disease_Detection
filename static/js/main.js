@@ -1,54 +1,76 @@
 $(document).ready(function () {
-    // Init
-    $('.image-section').hide();
-    $('.loader').hide();
-    $('#result').hide();
+    const imageUpload = $('#imageUpload');
+    const uploadedImage = $('#uploadedImage');
+    const predictButton = $('#predictButton');
+    const predictionResult = $('#predictionResult');
+    const resultText = $('#resultText');
 
-    // Upload Preview
-    function readURL(input) {
-        if (input.files && input.files[0]) {
-            var reader = new FileReader();
+    imageUpload.on('change', function () {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
             reader.onload = function (e) {
-                $('#imagePreview').css('background-image', 'url(' + e.target.result + ')');
-                $('#imagePreview').hide();
-                $('#imagePreview').fadeIn(650);
-            }
-            reader.readAsDataURL(input.files[0]);
+                uploadedImage.attr('src', e.target.result);
+                uploadedImage.removeAttr('hidden');
+            };
+            reader.readAsDataURL(file);
+            predictButton.removeAttr('disabled');
         }
-    }
-    $("#imageUpload").change(function () {
-        $('.image-section').show();
-        $('#btn-predict').show();
-        $('#result').text('');
-        $('#result').hide();
-        readURL(this);
     });
 
-    // Predict
-    $('#btn-predict').click(function () {
-        var form_data = new FormData($('#upload-file')[0]);
+    predictButton.on('click', function () {
+        const file = imageUpload[0].files[0];
+        if (!file) {
+            return;
+        }
+        const formData = new FormData();
+        formData.append('file', file);
 
-        // Show loading animation
-        $(this).hide();
-        $('.loader').show();
+        predictButton.attr('disabled', 'disabled');
+        predictButton.text('Predicting...');
 
-        // Make prediction by calling api /predict
+        // $.ajax({
+        //     type: 'POST',
+        //     url: '/predict',
+        //     data: formData,
+        //     contentType: false,
+        //     cache: false,
+        //     processData: false,
+        //     success: function (data) {
+        //         resultText.text(data);
+        //         predictionResult.removeAttr('hidden');
+        //         predictButton.removeAttr('disabled');
+        //         predictButton.text('Predict');
+        //     },
+        //     error: function () {
+        //         alert('Error occurred while making the prediction. Please try again.');
+        //         predictButton.removeAttr('disabled');
+        //         predictButton.text('Predict');
+        //     }
+        // });
         $.ajax({
             type: 'POST',
             url: '/predict',
-            data: form_data,
+            data: formData,
             contentType: false,
             cache: false,
             processData: false,
-            async: true,
-            success: function (data) {
-                // Get and display the result
-                $('.loader').hide();
-                $('#result').fadeIn(600);
-                $('#result').text(' Result:  ' + data);
-                console.log('Success!');
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+                xhr.setRequestHeader('Pragma', 'no-cache');
+                xhr.setRequestHeader('Expires', '0');
             },
+            success: function (data) {
+                resultText.text(data);
+                predictionResult.removeAttr('hidden');
+                predictButton.removeAttr('disabled');
+                predictButton.text('Predict');
+            },
+            error: function () {
+                alert('Error occurred while making the prediction. Please try again.');
+                predictButton.removeAttr('disabled');
+                predictButton.text('Predict');
+            }
         });
     });
-
 });

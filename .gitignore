@@ -30,7 +30,6 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-saved_models/*
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -137,4 +136,4 @@ dmypy.json
 
 
 # others files/folders
-Dataset/
+*.drawio
