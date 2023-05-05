@@ -1,0 +1,294 @@
+
+
+this is code of index.html:
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{url_for('static',filename='css/main.css')}}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="{{url_for('static',filename='js/main.js')}}"></script>
+    <title>Malaria Disease Detection</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="text-center mt-5">Malaria Disease Detection</h1>
+        <div class="row mt-5">
+            <div class="col-md-6 offset-md-3">
+                <div class="input-group mb-3">
+                    <input type="file" class="form-control" id="imageUpload">
+                </div>
+                <div class="text-center">
+                    <img src="" alt="uploaded image" id="uploadedImage" class="img-fluid rounded" hidden>
+                </div>
+                <div class="text-center mt-3">
+                    <button class="btn btn-primary" id="predictButton" disabled>Predict</button>
+                </div>
+                <div class="text-center mt-3" id="predictionResult" hidden>
+                    <h4>Prediction: <span id="resultText"></span></h4>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- <script src="/static/js/main.js"></script> -->
+</body>
+
+</html>
+
+
+this is the code of main.css:
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f8f9fa;
+}
+
+img {
+    max-width: 100%;
+}
+
+
+
+this is the code of main.js:
+
+
+$(document).ready(function () {
+    const imageUpload = $('#imageUpload');
+    const uploadedImage = $('#uploadedImage');
+    const predictButton = $('#predictButton');
+    const predictionResult = $('#predictionResult');
+    const resultText = $('#resultText');
+
+    imageUpload.on('change', function () {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                uploadedImage.attr('src', e.target.result);
+                uploadedImage.removeAttr('hidden');
+            };
+            reader.readAsDataURL(file);
+            predictButton.removeAttr('disabled');
+        }
+    });
+
+    predictButton.on('click', function () {
+        const file = imageUpload[0].files[0];
+        if (!file) {
+            return;
+        }
+        const formData = new FormData();
+        formData.append('file', file);
+
+        predictButton.attr('disabled', 'disabled');
+        predictButton.text('Predicting...');
+
+        // $.ajax({
+        //     type: 'POST',
+        //     url: '/predict',
+        //     data: formData,
+        //     contentType: false,
+        //     cache: false,
+        //     processData: false,
+        //     success: function (data) {
+        //         resultText.text(data);
+        //         predictionResult.removeAttr('hidden');
+        //         predictButton.removeAttr('disabled');
+        //         predictButton.text('Predict');
+        //     },
+        //     error: function () {
+        //         alert('Error occurred while making the prediction. Please try again.');
+        //         predictButton.removeAttr('disabled');
+        //         predictButton.text('Predict');
+        //     }
+        // });
+        $.ajax({
+            type: 'POST',
+            url: '/predict',
+            data: formData,
+            contentType: false,
+            cache: false,
+            processData: false,
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+                xhr.setRequestHeader('Pragma', 'no-cache');
+                xhr.setRequestHeader('Expires', '0');
+            },
+            success: function (data) {
+                resultText.text(data);
+                predictionResult.removeAttr('hidden');
+                predictButton.removeAttr('disabled');
+                predictButton.text('Predict');
+            },
+            error: function () {
+                alert('Error occurred while making the prediction. Please try again.');
+                predictButton.removeAttr('disabled');
+                predictButton.text('Predict');
+            }
+        });
+    });
+});
+
+
+
+this is code of app.py:
+
+from __future__ import division, print_function
+# coding=utf-8
+import sys
+import os
+import glob
+import re
+import numpy as np
+
+# Keras
+# from tensorflow.keras.applications.imagenet_utils import preprocess_input
+from tensorflow.keras.applications.vgg19 import preprocess_input
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing import image
+
+# Flask utils
+from flask import Flask, redirect, url_for, request, render_template
+from werkzeug.utils import secure_filename
+#from gevent.pywsgi import WSGIServer
+
+# Define a flask app
+app = Flask(__name__)
+
+# Model saved with Keras model.save()
+# MODEL_PATH = 'saved_models/model_vgg19.h5'
+
+# Get the absolute path to the script's directory
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+model_version = max([int(i) for i in os.listdir(
+    "saved_models") if i != '.DS_Store'] + [0])
+
+print("Using model version: ", model_version)
+# Construct the path to the model file using the script's directory
+# model_path = os.path.join(script_dir, "../saved_models/1")
+# model_path = os.path.join(script_dir, "../idg_models/1/peppermodel.h5")
+model_path = os.path.join(
+    script_dir, f"saved_models/{model_version}/model_vgg19.h5")
+
+
+# Load your trained model
+model = load_model(model_path)
+
+CLASS_NAMES = ["Parasitized", "Uninfected"]
+
+
+def model_predict(img_path, model):
+    img = image.load_img(img_path, target_size=(224, 224))
+
+    # Preprocessing the image
+    x = image.img_to_array(img)
+    # x = np.true_divide(x, 255)
+    # Scaling
+    x = x/255
+    x = np.expand_dims(x, axis=0)
+
+    # Be careful how your trained model deals with the input
+    # otherwise, it won't make correct prediction!
+    x = preprocess_input(x)
+
+    predictions = model.predict(x)
+    index = np.argmax(predictions[0])
+    predicted_class = CLASS_NAMES[index]
+    confidence = np.max(predictions[0])
+
+    print("predictions index: ", index)
+    print(predicted_class, confidence)
+
+    # print("preds before argmax: ", preds)
+    # preds = np.argmax(preds, axis=1)
+    # print("preds after argmax and before condition: ", preds)
+
+    preds = ""
+    if index == 0:
+        preds = "The Person is Infected With Malaria"
+    else:
+        preds = "The Person is not Infected With Malaria"
+
+    return preds
+
+# def model_predict(img_path, model):
+#     img = image.load_img(img_path, target_size=(224, 224))
+
+#     # Preprocessing the image
+#     x = image.img_to_array(img)
+#     x = x/255
+#     x = np.expand_dims(x, axis=0)
+
+#     # Be careful how your trained model deals with the input
+#     # otherwise, it won't make correct prediction!
+#     x = preprocess_input(x)
+
+#     preds = model.predict(x)
+#     #preds = np.argmax(preds, axis=1)
+#     # preds = preds[0]  # extract the prediction value from the array
+#     print(preds)
+#     if preds[0] < 0.5:
+#         preds = "The Person is Infected With Malaria"
+#     else:
+#         preds = "The Person is not Infected With Malaria"
+
+#     return preds
+
+
+@app.route('/', methods=['GET'])
+def index():
+    # Main page
+    return render_template('index.html')
+
+
+@app.route('/predict', methods=['GET', 'POST'])
+def upload():
+    print("Request.method = ", request.method)
+    if request.method == 'POST':
+        # Get the file from post request
+        f = request.files['file']
+
+        # Save the file to ./uploads
+        basepath = os.path.dirname(__file__)
+        file_path = os.path.join(
+            basepath, 'uploads', secure_filename(f.filename))
+        f.save(file_path)
+        print("file_path:  ", file_path)
+        print("model:  ", model)
+        # Make prediction
+        preds = model_predict(file_path, model)
+        print("Done prediction..... ", preds)
+        result = preds
+        return result
+    return None
+
+
+if __name__ == '__main__':
+    # app.run(debug=True)
+
+    # Serving the app on local host: http://localhost:3000/
+    app.run(debug=True, host="0.0.0.0", port=3000)
+
+
+
+model is saved inside this path: saved_models/2/model_vgg19.h5
+
+
+
+
+
+
+When i am running app.py, I keep getting same output as below:
+
+"The Person is not Infected With Malaria"
+
+I have trained the model against 200MB files on AWS EC2 instance for 2 hours.
+I gave 92% accuracy on training and 90% accuracy on validation.
+
+So I am not sure what is going on... I am not sure if I am missing something here.

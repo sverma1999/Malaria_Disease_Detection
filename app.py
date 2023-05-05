@@ -29,6 +29,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 model_version = max([int(i) for i in os.listdir(
     "saved_models") if i != '.DS_Store'] + [0])
 
+print("Using model version: ", model_version)
 # Construct the path to the model file using the script's directory
 # model_path = os.path.join(script_dir, "../saved_models/1")
 # model_path = os.path.join(script_dir, "../idg_models/1/peppermodel.h5")
@@ -129,4 +130,7 @@ def upload():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # app.run(debug=True)
+
+    # Serving the app on local host: http://localhost:3000/
+    app.run(debug=True, host="0.0.0.0", port=3000)
