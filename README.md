@@ -36,7 +36,7 @@ git clone https://github.com/sverma1999/Malaria_Disease_Detection.git
 ### Step 2- Create a conda environment after opening the repository
 
 ```bash
-conda create -n venvMalariaProject python=3.9 -y
+conda create -n venvMalariaProject python=3.10.11 -y
 ```
 
 ```bash
@@ -57,9 +57,42 @@ python app.py
 
 ### Step 5. Prediction application
 
-```bash
-http://localhost:3000
-```
+1. Test the API locally using Postman
+
+   Run the API locally using FastAPI
+
+   ```bash
+   cd   api
+   python main.py
+   ```
+
+   Go to Postman application and send a POST request to http://127.0.0.1:3000/predict with the image in the body.
+
+   You should get a response like this:
+
+   ```bash
+   The Person is not Infected With Malaria
+   ```
+
+   OR
+
+   ```bash
+   The Person is Infected With Malaria
+   ```
+
+2. Test the API on cloud using AWS EC2
+
+   Create build docker image which is ready to deploy on AWS EC2
+
+   ```bash
+   docker build -t mdd-app .
+   ```
+
+   Run the docker image
+
+   ```bash
+   docker run -p 3000:3000 mdd-app
+   ```
 
 ## ECR Repository
 
@@ -109,6 +142,96 @@ AWS_REGION = us-east-1
 AWS_ECR_LOGIN_URI =
 
 ECR_REPOSITORY_NAME = personalproject_mdd
+
+# **During the training of the model**
+
+1. Launch Instance
+2. Choose the Ubuntu AMI for deep learning, instance with more CPU and or GPU, security group, and key pair.
+3. Click in the Instance ID and connect
+
+# Inside EC2 Instance
+
+1. Update the package index:
+
+```bash
+sudo apt-get update
+```
+
+2. If pip is missing, install pip for Python 3:
+
+```bash
+sudo apt-get install python3-pip
+```
+
+3. Verify that pip is installed:
+
+```bash
+pip3 --version
+```
+
+4. Install the AWS CLI on the instance:
+
+```bash
+sudo apt-get install awscli -y
+```
+
+5. Configure the AWS CLI with your AWS access and secret keys:
+
+```bash
+aws configure
+```
+
+Enter your AWS access key ID, secret access key, and region (e.g. us-east-1).
+Note: AWS access key ID and secret access key are available from the AWS console, or you downloaded them when you created your IAM user. Check CSV or Excel file.
+
+## If you are using S3:
+
+Inside EC2 instance terminal:
+
+1. Try to list the contents of an S3 bucket:
+
+```bash
+aws s3 ls
+```
+
+You should see a list of your S3 buckets. 2. Create folder in EC2 instance:
+
+```bash
+mkdir mddProjectEC2
+```
+
+3. Sync your S3 bucket containing the dataset to the instance:
+
+```bash
+aws s3 sync s3://mddProject mddProjectEC2
+```
+
+## If you are cloning from GitHub to EC2 instance:
+
+Clone the repository and main branch (by default):
+
+1. git clone https://github.com/sverma1999/Malaria_Disease_Detection.git
+
+   OR
+
+Clone specific branch:
+
+1. git clone -b dev_2 https://github.com/sverma1999/Malaria_Disease_Detection.git
+
+2. Go inside the folder:
+
+```bash
+cd Malaria_Disease_Detection
+```
+
+Once done with training, push the changes (new model) to GitHub:
+
+1. git status
+2. git add .
+3. git commit -m "message"
+4. git push origin branch_name or git push
+
+   if asked for username and password, enter your GitHub username and password. Password will be "personal access token (PAT)" which you can create from GitHub settings and save it somewhere safe.
 
 ## Acknowledgment
 

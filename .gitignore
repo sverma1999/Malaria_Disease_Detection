@@ -140,3 +140,4 @@ dmypy.json
 Dataset/
 cell_images/
 aws_setup/
+*.drawio
